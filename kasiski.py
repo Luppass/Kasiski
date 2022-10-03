@@ -3,11 +3,83 @@ import sys
 file = open(sys.argv[1], 'r')
 text = file.read()
 
+pentahashmap = {}
 cuatrihashmap = {}    
 trihashmap = {}
 
-# Vamos a utilizar sólo cuatrigramas y trigramas en esta implementación.
+# Vamos a utilizar pentagramas, cuatrigramas y trigramas en esta implementación.
 
+
+# Cálculo apariciones de pentagramas
+
+for index in range(len(text)-4):
+    
+    count = 0
+    pentagram = text[index]+text[index+1]+text[index+2]+text[index+3]+text[index+4]
+    for auxindex in range(len(text)-4):
+        if auxindex != 0:
+            auxpentagram = text[auxindex]+text[auxindex+1]+text[auxindex+2]+text[auxindex+3]+text[auxindex+4]
+            if pentagram == auxpentagram:
+                count+=1
+                pentahashmap [pentagram] = count
+
+for i in pentahashmap.copy():
+        if pentahashmap[i] == 1 or pentahashmap[i] == 2:  # Eliminamos los cuatrigramas que menos se repiten, esto se puede cambiar para tener distintas precisiones
+            pentahashmap.pop(i)   
+
+
+# En esta parte, result será un string que en cada salto de línea presentaremos el índice de todas las ocurrencias de los cuatrigramas.
+
+result = ''   
+for i in pentahashmap:
+    for j in range(pentahashmap[i]):
+        offset = -1
+        while True:
+            try:
+                offset = text.index(i, offset+1)
+            except ValueError: # No hay más ocurrencias, por lo que metemos un salto de línea y avanzamos al siguiente cuatrigrama
+                result += '\n'
+                break
+            result += str(offset) + ' '
+
+result2 = result.split('\n')
+mcdNumbers = []
+for i in range(len(result2)-1):
+    if(i%2 == 0): # Si eliminamos hasta los pentagramas con 2 repeticiones, es i%3, si NO los eliminamos, es i%2
+        n1 = int(result2[i].split(' ')[0])
+        n2 = int(result2[i].split(' ')[1])
+        n3 = int(result2[i].split(' ')[2])
+
+        try:  # En este try se decide que no vamos a guardar mas de 4 indices del mismo pentagramas
+            n4 = int(result2[i].split(' ')[3])
+        except ValueError or IndexError:
+            d1 = n3-n2
+            d2 = n2-n1
+            mcdNumbers.append(d1)
+            mcdNumbers.append(d2)
+
+        
+# Cálculo de MCD para saber la longitud de la clave
+
+def find_gcd(x, y):
+    while(y):
+        x, y = y, x % y
+    return x
+
+gc3=0
+gc2=0
+for i in range(0, round(len(mcdNumbers)/2)): # todo
+    gc3=find_gcd(gc3, mcdNumbers[i])
+
+for i in range(round(len(mcdNumbers)/2), len(mcdNumbers)): # mitad
+    gc2=find_gcd(gc2, mcdNumbers[i])
+
+# Cogemos el mayor mcd de los tres
+
+if gc3 > gc2 and gc2 > 1 or gc3 == 1 or gc3 == 0:
+    mcd5 = gc2
+else :
+    mcd5 = gc3
 
 # Cálculo apariciones de cuatrigramas
 
@@ -60,23 +132,17 @@ for i in range(len(result2)-1):
         
 # Cálculo de MCD para saber la longitud de la clave
 
-def find_gcd(x, y):
-    while(y):
-        x, y = y, x % y
-    return x
+
 gc1=0
 gc2=0
-gc3=0
 #Vamos a hacer grupos de longitudes para intentar evitar distancias falsas
 for i in range((len(mcdNumbers)-round((len(mcdNumbers)/2)))): # principio a mitad
     gc1=find_gcd(gc1, mcdNumbers[i])
 for i in range(round(len(mcdNumbers)/2), len(mcdNumbers)): # mitad a final
     gc2=find_gcd(gc2, mcdNumbers[i])
-for i in range(len(mcdNumbers)): # todo
-    gc3=find_gcd(gc3, mcdNumbers[i])
 
 # Cogemos el mayor mcd de los tres
-mcd4 = max(gc1,gc2,gc3)
+mcd4 = max(gc1,gc2)
 
 # Cálculo apariciones de trigramas, mismo planteamiento
 
@@ -140,9 +206,20 @@ for i in range(len(mcdNumbers)): # todo
 # Cogemos el mayor mcd de los tres
 mcd3 = max(gc1,gc2,gc3)
 
-########################## Operación comun ########################################
 
-mcd = max(mcd3, mcd4) # De aquí sacamos la longitud de la clave
+
+            ########################## Operación comun #################################
+
+
+mcdlist = [mcd3, mcd4, mcd5]
+
+for i in range(len(mcdlist)-1):
+    if mcdlist[i] == 0 or mcdlist[i] == 1:
+        mcdlist.pop(i)
+
+mcd = min(mcdlist)    
+
+
 if(mcd == 0):
     exit('No es posible encontrar la longitud de la clave, cerrando programa...')
 
@@ -205,7 +282,8 @@ for index in range(mcd):
             max = frecuencias[index][i]
 
 # Si el caracter del subcriptograma en frecuencia tiene a 4 posiciones a su derecha a otra letra la cual
-# tiene un valor de al menos un 75% del máximo, suponemos que la relación es A->E.
+# tiene un valor de al menos un 72% del máximo, suponemos que la relación es A->E. Dado que la clave del cifrado desplaza N posiciones,
+# la letra de la clave va a ser la 'A'
 for i in range(mcd):
     if frecuencias[i][chr((((ord(maximoSubcriptograma[i]) - 65) - 4) % 26) + 65)] > 0.75 * frecuencias[i][maximoSubcriptograma[i]]: # Si es verdad, A->E
         maximoSubcriptograma[i] = chr((((ord(maximoSubcriptograma[i]) - 65 - 4) % 26) + 65))
