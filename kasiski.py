@@ -1,7 +1,15 @@
 import sys
 
+
+if len(sys.argv) != 2:
+    print("\nUso incorrecto del comando, utilizar la sintaxis:\npython3 kasiski.py cifrado.txt\n")
+    exit()
+
+
 file = open(sys.argv[1], 'r')
 text = file.read()
+
+#text = 'LFEWCYUGDCUXIGOYYGZHHXICILPSNQVHJMWAIWXCUJEOOAUWTHECWOCYLEKSSUPVGWUXVHHMGPOKLEGOZSGJFAUPVGLHHDSJCWZWZLIXHHHKPZVMHZXHFSNOYYQJXVYRPBIIPXCUUKPOKOVVBAYUPWUWVHWUOXJGLMGPFYYPJGICIIMJIRAWAUPJGHZYZUVMYVJLYRPBHMEMHLHGJBHVYIRHHXZOJYMOSYYXDFHSINQBLVZZVMWJPYYYIDSUXJQBVMZFAIGJBWUTZZHVWJFIYROSKYGJQPHEMSZYVOOSIWXCYNEJQOIXMCGIWYSARMNHVLVVRLFQDGTIXVAHHSLILFSNFLWXVBNOPJGKYTVHHNEXCUORKOSCPGCSUVBCKYFMCJBIOOWCRXVHORMSJNEIUBFSYSWUXVHHOROFVTSYSJBMNHVLVVMVNVJFLWXVBNOPJRLJEOOAUVZDPNIZZWLSXSZIGJBLFVZGAIHZZHMTVHHNENMARMNHVLVVTYCIGCZXIIILPSZBSUQDGTUWVFAYRYCUXICOZZVDHVFENDHNEOOZYWXIYLIGCZMSWFLJEKSSUFNCYVIIHLMEUCUUPVGWUXVHHMGVGJUPJGOOIQCZZVDSWOIYSZBEXSYFSNQVHTPBACPGOVMMISSFETGHTSIOSIWNWYPIZBJUHVDSUXJIUBYZJVORKOYXIKWUWLNRLNBDGAIVMOJIRKOAUXVMBHEKCYWMJBKYPZQOOKVOKIVIOJIRPBHMLJXHMHZDLLIEWSFEQOSUPZQOOKVGLWEOFVWIVMWIRGOLHYIPVFTDQHFEXSIIPGSAUIIXBFMVBHZMIOFUKMSNUPVSUYPHCTYROCKYWZFCCVNOGIRVMHFMIOSUGJBHWIDHLSZDBHAVZQVHWZXVUPVVVLEYSJIRAWAUVGOZJEOOAUWZGPGTJFAUROSXOINSOUKVBWIVYSUNVJMXOIICZYHJFLHTMSCCIISLFINHYYRDAPYROCFGIECYUIGDYIGZGVXMBSZNMQCMUZJFLWMZBKIPVTBHGDCUBIKOACGVTHPSMSJYIGQYYGDAPYROCVMIJMTCRZFHFMUOJCSIRLFSNVBYWJGZCIIRVGYTWTJSMHHHXZSUFEZRHXMITHHXDZFYRGOZJIMGVHENAHSSMSZR'
 
 pentahashmap = {}
 cuatrihashmap = {}    
@@ -45,7 +53,7 @@ for i in pentahashmap:
 result2 = result.split('\n')
 mcdNumbers = []
 for i in range(len(result2)-1):
-    if(i%2 == 0): # Si eliminamos hasta los pentagramas con 2 repeticiones, es i%3, si NO los eliminamos, es i%2
+    if(i%8 == 0): # Si eliminamos hasta los pentagramas con 2 repeticiones, es i%3, si NO los eliminamos, es i%2
         n1 = int(result2[i].split(' ')[0])
         n2 = int(result2[i].split(' ')[1])
         n3 = int(result2[i].split(' ')[2])
@@ -58,8 +66,12 @@ for i in range(len(result2)-1):
             mcdNumbers.append(d1)
             mcdNumbers.append(d2)
 
-        
 # Cálculo de MCD para saber la longitud de la clave
+
+mcd5Flag = False
+if len(mcdNumbers) > 1:
+    mcd5Flag = True 
+
 
 def find_gcd(x, y):
     while(y):
@@ -67,19 +79,11 @@ def find_gcd(x, y):
     return x
 
 gc3=0
-gc2=0
-for i in range(0, round(len(mcdNumbers)/2)): # todo
+
+for i in range(round(len(mcdNumbers))):
     gc3=find_gcd(gc3, mcdNumbers[i])
-
-for i in range(round(len(mcdNumbers)/2), len(mcdNumbers)): # mitad
-    gc2=find_gcd(gc2, mcdNumbers[i])
-
-# Cogemos el mayor mcd de los tres
-
-if gc3 > gc2 and gc2 > 1 or gc3 == 1 or gc3 == 0:
-    mcd5 = gc2
-else :
-    mcd5 = gc3
+    
+mcd5 = gc3
 
 # Cálculo apariciones de cuatrigramas
 
@@ -134,15 +138,15 @@ for i in range(len(result2)-1):
 
 
 gc1=0
-gc2=0
-#Vamos a hacer grupos de longitudes para intentar evitar distancias falsas
-for i in range((len(mcdNumbers)-round((len(mcdNumbers)/2)))): # principio a mitad
-    gc1=find_gcd(gc1, mcdNumbers[i])
-for i in range(round(len(mcdNumbers)/2), len(mcdNumbers)): # mitad a final
-    gc2=find_gcd(gc2, mcdNumbers[i])
 
-# Cogemos el mayor mcd de los tres
-mcd4 = max(gc1,gc2)
+mcd4Flag = False
+if len(mcdNumbers) > 1:
+    mcd4Flag = True 
+
+for i in range((len(mcdNumbers))): 
+    gc1=find_gcd(gc1, mcdNumbers[i])
+
+mcd4 = gc1
 
 # Cálculo apariciones de trigramas, mismo planteamiento
 
@@ -208,16 +212,24 @@ mcd3 = max(gc1,gc2,gc3)
 
 
 
+
             ########################## Operación comun #################################
 
 
 mcdlist = [mcd3, mcd4, mcd5]
 
+
 for i in range(len(mcdlist)-1):
     if mcdlist[i] == 0 or mcdlist[i] == 1:
         mcdlist.pop(i)
 
-mcd = min(mcdlist)    
+
+if(mcd5Flag):
+    mcd = mcd5    
+elif(mcd4Flag):
+    mcd = mcd4   
+else:
+    mcd = mcd3
 
 
 if(mcd == 0):
@@ -269,11 +281,12 @@ for i in range(mcd):
         frecuencias[i][j] = (frecuencias[i][j] / 26)
 
 
-# Momento de tirarse un triple dando por hecho que la frecuencia más alta será, por estadística la 'E'. Sólo textos en Español !!!!
 maximoSubcriptograma = [] # Lista con los máximos
 for i in range(mcd):
     maximoSubcriptograma.append('')
 
+
+# Momento de tirarse un triple dando por hecho que la frecuencia más alta será, por estadística la 'E'. Sólo textos en Español !!!!
 for index in range(mcd):
     max = 0
     for i in frecuencias[index].keys():
@@ -282,8 +295,8 @@ for index in range(mcd):
             max = frecuencias[index][i]
 
 # Si el caracter del subcriptograma en frecuencia tiene a 4 posiciones a su derecha a otra letra la cual
-# tiene un valor de al menos un 72% del máximo, suponemos que la relación es A->E. Dado que la clave del cifrado desplaza N posiciones,
-# la letra de la clave va a ser la 'A'
+# tiene un valor de al menos un 75% del máximo, suponemos que la relación es A->E. Dado que la clave del cifrado desplaza N posiciones,
+# la letra de la clave va a ser la 'A' en cada subcriptograma
 for i in range(mcd):
     if frecuencias[i][chr((((ord(maximoSubcriptograma[i]) - 65) - 4) % 26) + 65)] > 0.75 * frecuencias[i][maximoSubcriptograma[i]]: # Si es verdad, A->E
         maximoSubcriptograma[i] = chr((((ord(maximoSubcriptograma[i]) - 65 - 4) % 26) + 65))
